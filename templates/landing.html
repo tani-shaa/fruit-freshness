@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshScan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="page" id="page">
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-logo">FreshScan</div>
+        <ul class="nav-tabs" id="navTabs">
+            <li class="tab active" data-idx="0">Apple</li>
+            <li class="tab"        data-idx="1">Mango</li>
+            <li class="tab"        data-idx="2">Strawberry</li>
+            <li class="tab"        data-idx="3">Blueberry</li>
+        </ul>
+        <div class="nav-right">
+            <a href="/app">Detect</a>
+            <span class="nav-divider">|</span>
+            <a href="/app">Analyse</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <!-- Giant BG word -->
+        <div class="bg-word" id="bgWord">Apple</div>
+
+        <!-- LEFT TEXT -->
+        <div class="hero-left">
+            <p class="hero-eyebrow">AI · CNN · OpenCV</p>
+            <h1 class="hero-title" id="heroTitle">Apple</h1>
+            <p class="hero-tagline">Fresh · Natural · Healthy</p>
+            <p class="hero-desc" id="heroDesc">
+                Crisp, sweet and packed with nutrients. Upload a photo and our AI tells you instantly if it's fresh, can be eaten, or rotten.
+            </p>
+            <div class="hero-badges" id="heroBadges">
+                <span class="badge">Vitamin C</span>
+                <span class="badge">Potassium</span>
+                <span class="badge">Fiber</span>
+            </div>
+            <a href="/app" class="hero-cta">Analyse Now →</a>
+        </div>
+
+        <!-- CENTER — can/product -->
+        <div class="hero-center" id="heroCenter">
+
+            <!-- Floating slices (injected by JS) -->
+
+            <!-- Leaf decorations -->
+            <div class="leaf" style="top:10%;left:38%;--rot:-20deg;--dur:5s;--delay:0s">🍃</div>
+            <div class="leaf" style="top:15%;right:35%;--rot:15deg;--dur:6s;--delay:1s">🍃</div>
+
+            <!-- Glow + shadow -->
+            <div class="can-glow"></div>
+
+            <!-- The "can" -->
+            <div class="can-wrap" id="canWrap">
+                <img id="canImg"
+                     src="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=600&fit=crop"
+                     alt="Fruit">
+                <div class="can-label">
+                    <div class="can-label-title">Freshness Check</div>
+                    <div class="can-label-name" id="canLabelName">Sweet Apple</div>
+                    <div class="can-label-sub">100% Natural · AI Verified</div>
+                </div>
+            </div>
+            <div class="can-shadow"></div>
+
+        </div>
+
+        <!-- RIGHT INFO -->
+        <div class="hero-right">
+            <div class="info-block">
+                <div class="info-block-label">Origin</div>
+                <div class="info-block-origin" id="infoOrigin">Central Asia</div>
+                <div class="info-block-sub" id="infoOriginSub">🌍 Grown worldwide</div>
+            </div>
+            <div class="info-block">
+                <div class="info-block-label">Popular Types</div>
+                <div class="nutrient-pills" id="infoTypes">
+                    <span>Fuji</span>
+                    <span>Gala</span>
+                    <span>Granny Smith</span>
+                </div>
+            </div>
+            <div class="info-block">
+                <div class="info-block-label">Key Nutrients</div>
+                <div class="nutrient-pills" id="infoNutrients">
+                    <span>Vitamin C</span>
+                    <span>Potassium</span>
+                    <span>Fiber</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom CTA -->
+        <a href="/app" class="bottom-cta">
+            Analyse Now
+            <div class="cta-line"></div>
+        </a>
+
+    </section>
+</div>
+
+<!-- Dot nav -->
+<div class="dots" id="dots"></div>
+
+<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+</body>
+</html>

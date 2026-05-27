@@ -1,0 +1,281 @@
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh; width: 100vw;
+    transition: background 0.7s ease;
+}
+
+/* ── Full screen ─────────────────────────────────────────────────── */
+.page {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    transition: background 0.7s ease;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+.nav {
+    display: flex; align-items: center;
+    padding: 24px 52px; gap: 0;
+    position: relative; z-index: 50;
+}
+.nav-logo {
+    font-size: 1.4rem; font-weight: 900;
+    color: #fff; letter-spacing: 1px;
+    margin-right: auto;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.nav-tabs { display: flex; list-style: none; gap: 0; position: absolute; left: 50%; transform: translateX(-50%); }
+.tab {
+    padding: 6px 30px; font-size: 0.92rem; font-weight: 500;
+    color: rgba(255,255,255,0.7); cursor: pointer;
+    position: relative; transition: color 0.2s; letter-spacing: 0.3px;
+}
+.tab::after {
+    content: ''; position: absolute; bottom: -3px; left: 30px; right: 30px;
+    height: 2px; background: #fff; border-radius: 2px;
+    transform: scaleX(0); transition: transform 0.3s;
+}
+.tab.active { color: #fff; font-weight: 700; }
+.tab.active::after { transform: scaleX(1); }
+.tab:hover { color: #fff; }
+.nav-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.nav-right a { color: rgba(255,255,255,0.75); text-decoration: none; padding: 0 10px; font-size: 0.9rem; transition: color 0.2s; }
+.nav-right a:hover { color: #fff; }
+.nav-divider { color: rgba(255,255,255,0.35); }
+
+/* ── Hero body ───────────────────────────────────────────────────── */
+.hero {
+    flex: 1; position: relative;
+    display: flex; align-items: center;
+    padding: 0 52px 60px;
+    overflow: hidden;
+}
+
+/* Giant BG word */
+.bg-word {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(130px, 21vw, 260px);
+    font-weight: 900; letter-spacing: -8px;
+    color: rgba(255,255,255,0.22);
+    white-space: nowrap; pointer-events: none;
+    user-select: none; line-height: 1; z-index: 1;
+}
+
+/* ── Left text block ─────────────────────────────────────────────── */
+.hero-left {
+    flex: 0 0 300px; z-index: 10;
+    display: flex; flex-direction: column; gap: 16px;
+}
+.hero-eyebrow {
+    font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.65); font-weight: 600;
+}
+.hero-title {
+    font-size: clamp(2.8rem, 5vw, 4.8rem);
+    font-weight: 900; line-height: 1.0; letter-spacing: -2px;
+    color: #fff;
+}
+.hero-tagline {
+    font-size: 0.82rem; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(255,255,255,0.55);
+}
+.hero-desc {
+    font-size: 0.88rem; color: rgba(255,255,255,0.7);
+    line-height: 1.75; max-width: 250px;
+}
+.hero-badges {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+}
+.badge {
+    padding: 5px 14px; border-radius: 20px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size: 0.72rem; font-weight: 600; color: #fff;
+}
+.hero-cta {
+    margin-top: 8px;
+    display: inline-block; padding: 13px 32px;
+    background: #fff; color: #333;
+    border-radius: 40px; font-size: 0.85rem; font-weight: 800;
+    text-decoration: none; width: fit-content;
+    transition: all 0.25s;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,0.25); }
+
+/* ── Center — can/product ────────────────────────────────────────── */
+.hero-center {
+    flex: 1; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+}
+
+/* The "can" — styled fruit image in a tall rounded rectangle */
+.can-wrap {
+    position: relative;
+    width: 360px; height: 560px;
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow: 0 60px 120px rgba(0,0,0,0.35), 0 0 0 3px rgba(255,255,255,0.25);
+    animation: floatCan 4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+.can-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: opacity 0.4s;
+}
+/* Glow ring behind can */
+.can-glow {
+    position: absolute;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+    0%,100% { transform: translate(-50%,-50%) scale(1);   opacity: 0.8; }
+    50%      { transform: translate(-50%,-50%) scale(1.1); opacity: 1;   }
+}
+
+/* Shadow beneath can */
+.can-shadow {
+    position: absolute;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+    width: 260px; height: 40px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 50%;
+    filter: blur(20px);
+    z-index: 0;
+    animation: shadowPulse 4s ease-in-out infinite;
+}
+@keyframes shadowPulse {
+    0%,100% { transform: translateX(-50%) scaleX(1);   opacity: 0.6; }
+    50%      { transform: translateX(-50%) scaleX(0.85); opacity: 0.3; }
+}
+
+/* Shine overlay on can */
+.can-wrap::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+    border-radius: 40px;
+    pointer-events: none;
+}
+/* Can label overlay */
+.can-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    padding: 14px 16px 18px;
+    text-align: center;
+    border-radius: 0 0 40px 40px;
+}
+.can-label-title {
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: #555; margin-bottom: 2px;
+}
+.can-label-name {
+    font-size: 1.1rem; font-weight: 900; color: #222;
+    font-style: italic;
+}
+.can-label-sub {
+    font-size: 0.6rem; color: #888; margin-top: 2px;
+}
+
+@keyframes floatCan {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* Floating fruit slices around the can */
+.slice {
+    position: absolute; border-radius: 50%; overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    animation: floatSlice var(--dur,6s) ease-in-out infinite var(--delay,0s);
+}
+.slice img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@keyframes floatSlice {
+    0%,100% { transform: translateY(0) rotate(var(--rot,0deg)); }
+    50%      { transform: translateY(-20px) rotate(calc(var(--rot,0deg) + 8deg)); }
+}
+
+/* Leaf decorations */
+.leaf {
+    position: absolute; font-size: 2.5rem;
+    animation: floatSlice 5s ease-in-out infinite;
+    user-select: none; pointer-events: none;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+/* ── Right info block ────────────────────────────────────────────── */
+.hero-right {
+    flex: 0 0 220px; z-index: 10;
+    display: flex; flex-direction: column; gap: 20px;
+    align-items: flex-start;
+}
+.info-block {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 18px; padding: 18px 20px;
+    width: 100%;
+}
+.info-block-label {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px;
+    color: rgba(255,255,255,0.6); margin-bottom: 6px;
+}
+.info-block-value {
+    font-size: 2rem; font-weight: 900; color: #fff; line-height: 1;
+}
+.info-block-value span { font-size: 1rem; opacity: 0.7; }
+.info-block-sub { font-size: 0.75rem; color: rgba(255,255,255,0.65); margin-top: 4px; }
+.nutrient-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.nutrient-pills span {
+    font-size: 0.68rem; padding: 3px 10px;
+    background: rgba(255,255,255,0.2); border-radius: 20px; color: #fff;
+}
+
+/* ── Bottom CTA ──────────────────────────────────────────────────── */
+.bottom-cta {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    z-index: 50; text-align: center;
+    font-size: 0.78rem; font-weight: 800; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(255,255,255,0.8);
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: color 0.2s;
+}
+.bottom-cta:hover { color: #fff; }
+.cta-line { width: 1px; height: 30px; background: rgba(255,255,255,0.5); }
+
+/* ── Dot nav ─────────────────────────────────────────────────────── */
+.dots {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    z-index: 100; display: flex; flex-direction: column; gap: 10px;
+}
+.dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,255,255,0.35); cursor: pointer; transition: all 0.3s;
+}
+.dot.active { background: #fff; transform: scale(1.4); }
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+    .hero { flex-direction: column; padding: 0 24px 80px; gap: 20px; }
+    .hero-left { flex: unset; }
+    .hero-right { flex-direction: row; flex: unset; width: 100%; }
+    .nav { padding: 16px 20px; }
+    .nav-tabs { position: static; transform: none; display: none; }
+    .bg-word { font-size: 18vw; }
+}
+
+.info-block-origin {
+    font-size: 1.3rem; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 4px;
+}

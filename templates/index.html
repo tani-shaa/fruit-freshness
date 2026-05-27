@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshScan — Detect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- BG orbs -->
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="bg-orb orb-c"></div>
+
+    <!-- Full page emoji background -->
+    <div class="page-emoji-bg" id="heroBgImg"></div>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="logo">⬡ FreshScan</div>
+        <nav>
+            <a href="/">Home</a>
+            <a href="#detect">Detect</a>
+            <a href="#fruits-section">Fruits</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+
+    <!-- ── HERO ANALYSE SECTION ── -->
+    <section class="hero-analyse" id="detect">
+
+        <!-- Giant bg word (changes with slideshow) -->
+        <div class="hero-bg-word" id="heroBgWord">Apple</div>
+
+        <!-- Centre content -->
+        <div class="hero-content">
+            <p class="hero-eyebrow">AI · CNN · OpenCV</p>
+            <h1 class="hero-heading">Is your fruit <span>fresh?</span></h1>
+            <p class="hero-sub">Upload a photo — get an instant freshness score, verdict and shelf life estimate.</p>
+
+            <!-- Analyse card -->
+            <div class="analyse-card">
+
+                <div class="a-step">
+                    <div class="a-label">① Fruit</div>
+                    <select id="fruitSelect" class="a-select">
+                        <option value="" disabled selected>— select —</option>
+                        <option value="apple">🍎 Apple</option>
+                        <option value="banana">🍌 Banana</option>
+                        <option value="mango">🥭 Mango</option>
+                        <option value="orange">🍊 Orange</option>
+                        <option value="grapes">🍇 Grapes</option>
+                        <option value="strawberry">🍓 Strawberry</option>
+                        <option value="watermelon">🍉 Watermelon</option>
+                        <option value="pineapple">🍍 Pineapple</option>
+                        <option value="papaya">🧡 Papaya</option>
+                        <option value="kiwi">🥝 Kiwi</option>
+                        <option value="cherry">🍒 Cherry</option>
+                        <option value="pomegranate">❤️ Pomegranate</option>
+                        <option value="pear">🍐 Pear</option>
+                        <option value="peach">🍑 Peach</option>
+                        <option value="blueberry">🫐 Blueberry</option>
+                    </select>
+                </div>
+
+                <div class="a-divider"></div>
+
+                <div class="a-step">
+                    <div class="a-label">② Image</div>
+                    <input type="file" id="imageUpload" accept=".jpg,.jpeg,.png" hidden>
+                    <div class="upload-box" id="uploadBox">
+                        <span>↑</span> Drop or click · JPG/PNG
+                    </div>
+                    <img id="previewImg" src="" alt="Preview" class="preview-img hidden">
+                    <button class="btn-change hidden" id="changeBtn">↩ Change</button>
+                </div>
+
+                <div class="a-divider"></div>
+
+                <div class="a-step">
+                    <div class="a-label">③ Analyse</div>
+                    <button class="btn-analyse" id="uploadBtn">🔍 Analyse</button>
+                    <p id="uploadStatus" class="upload-status"></p>
+                </div>
+
+            </div>
+
+            <!-- Result box (shown after analysis) -->
+            <div id="resultBox" class="result-box hidden">
+                <p id="resultLabel"></p>
+                <p id="resultConf"></p>
+            </div>
+
+        </div>
+
+        <!-- Right — model status -->
+        <div class="hero-stats">
+            <div class="stat-card">
+                <div class="stat-label">Model Status</div>
+                <div class="stat-val" id="statAcc">—</div>
+            </div>
+            <div id="statTraining" class="training-badge hidden">⚙ Training…</div>
+        </div>
+
+    </section>
+
+    <!-- Comparison panel -->
+    <section id="comparisonPanel" class="comparison-panel hidden">
+        <div class="comp-side">
+            <p class="comp-label">Uploaded</p>
+            <img id="uploadedPreview" src="" alt="Uploaded">
+        </div>
+        <div class="comp-middle">
+            <div id="compBadge" class="comp-badge"></div>
+            <p id="compConf" class="comp-conf"></p>
+        </div>
+        <div class="comp-side">
+            <p class="comp-label">Fresh Reference</p>
+            <img id="referenceImg" src="" alt="Reference">
+            <p id="referenceLabel" class="ref-label"></p>
+        </div>
+    </section>
+
+    <!-- 15 Fruit cards -->
+    <section class="fruits" id="fruits-section">
+        <h2>Fruits We Detect</h2>
+        <p class="fruits-sub">Hover any card to see nutritional info</p>
+        <div class="fruit-grid" id="fruitGrid"></div>
+    </section>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="modal-close" id="modalClose">✕</button>
+
+            <!-- Icon + Title -->
+            <div id="modalIcon" class="modal-icon"></div>
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <p id="modalFruit" class="modal-fruit"></p>
+
+            <!-- Score bars: Fresh % and Rotten % -->
+            <div class="score-section">
+                <div class="score-row">
+                    <span class="score-label">Fresh</span>
+                    <div class="score-bar-wrap">
+                        <div id="barFresh" class="score-bar bar-fresh"></div>
+                    </div>
+                    <span id="scoreFresh" class="score-num">0%</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">Rotten</span>
+                    <div class="score-bar-wrap">
+                        <div id="barRotten" class="score-bar bar-rotten"></div>
+                    </div>
+                    <span id="scoreRotten" class="score-num">0%</span>
+                </div>
+            </div>
+
+            <!-- Days remaining -->
+            <div class="days-section" id="daysSection">
+                <div class="days-header">
+                    <span class="days-title">🗓 Shelf Life</span>
+                    <span class="days-count" id="daysCount"></span>
+                </div>
+                <div class="days-bar-wrap">
+                    <div class="days-bar" id="daysBar"></div>
+                </div>
+                <p class="days-msg" id="daysMsg"></p>
+            </div>
+
+            <!-- Image comparison -->
+            <div class="modal-images">
+                <div class="modal-img-wrap">
+                    <img id="modalUploadedImg" src="" alt="Uploaded">
+                    <span>Your Image</span>
+                </div>
+                <div class="modal-img-wrap">
+                    <img id="modalRefImg" src="" alt="Reference">
+                    <span>Fresh Reference</span>
+                </div>
+            </div>
+
+            <!-- Advice -->
+            <div id="modalAdvice" class="modal-advice">
+                <div class="advice-row">
+                    <span class="advice-icon" id="adviceIcon"></span>
+                    <span class="advice-text" id="adviceEdible"></span>
+                </div>
+                <div class="advice-shelf" id="adviceShelf"></div>
+                <div class="advice-days" id="adviceDays"></div>
+            </div>
+        </div>
+    </div>
+                    <span class="advice-text" id="adviceEdible"></span>
+                </div>
+                <div class="advice-shelf" id="adviceShelf"></div>
+                <div class="advice-days" id="adviceDays"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 FreshScan — Fruit Freshness Detection</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/fruits.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

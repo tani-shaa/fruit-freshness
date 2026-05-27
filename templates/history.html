@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshScan — History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .history-page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; position: relative; z-index: 1; }
+        .history-header { margin-bottom: 32px; }
+        .history-header h1 { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 6px; }
+        .history-header p  { color: rgba(255,255,255,0.6); font-size: 0.88rem; }
+        .stats-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+        .stat-pill {
+            padding: 10px 22px; border-radius: 40px; font-size: 0.85rem; font-weight: 700;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+        }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: rgba(255,255,255,0.6); text-decoration: none;
+            font-size: 0.82rem; margin-bottom: 28px; transition: color 0.2s;
+        }
+        .back-link:hover { color: #fff; }
+        .hist-table {
+            width: 100%; border-collapse: collapse;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 18px; overflow: hidden;
+        }
+        .hist-table th {
+            text-align: left; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 1.5px; color: rgba(255,255,255,0.5);
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+        }
+        .hist-table td {
+            padding: 14px 18px; font-size: 0.85rem; color: rgba(255,255,255,0.85);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .hist-table tr:last-child td { border-bottom: none; }
+        .hist-table tr:hover td { background: rgba(255,255,255,0.05); }
+        .v-fresh  { color: #4ade80; font-weight: 700; }
+        .v-eaten  { color: #fbbf24; font-weight: 700; }
+        .v-rotten { color: #f87171; font-weight: 700; }
+        .score-bar-mini { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.15); width: 80px; display: inline-block; vertical-align: middle; overflow: hidden; }
+        .score-fill { height: 100%; border-radius: 99px; background: #4ade80; }
+        .empty { text-align: center; padding: 60px; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="page-emoji-bg" id="heroBgImg"></div>
+
+    <header class="app-header">
+        <div class="logo">⬡ FreshScan</div>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/app">Detect</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+
+    <div class="history-page">
+        <a href="/app" class="back-link">← Back to App</a>
+
+        <div class="history-header">
+            <h1>Prediction History</h1>
+            <p>Every fruit analysis saved automatically</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-pill">📊 Total: {{ total }}</div>
+            <div class="stat-pill">✅ Fresh: {{ fresh_count }}</div>
+            <div class="stat-pill">❌ Rotten: {{ rotten_count }}</div>
+            {% if total > 0 %}
+            <div class="stat-pill">🎯 Fresh rate: {{ ((fresh_count / total) * 100) | round(1) }}%</div>
+            {% endif %}
+        </div>
+
+        {% if predictions %}
+        <table class="hist-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Image</th>
+                    <th>Fruit</th>
+                    <th>Verdict</th>
+                    <th>Freshness</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in predictions %}
+                <tr>
+                    <td style="color:rgba(255,255,255,0.3)">{{ p.id }}</td>
+                    <td>
+                        {% if p.filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + p.filename) }}"
+                             style="width:52px;height:52px;object-fit:cover;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);"
+                             onerror="this.style.display='none'">
+                        {% else %}—{% endif %}
+                    </td>
+                    <td style="text-transform:capitalize;font-weight:600">{{ p.fruit }}</td>
+                    <td class="{% if p.verdict == 'Fresh' %}v-fresh{% elif p.verdict == 'Can be Eaten' %}v-eaten{% else %}v-rotten{% endif %}">
+                        {{ p.verdict }}
+                    </td>
+                    <td>
+                        {{ p.fresh_pct }}%
+                        <span class="score-bar-mini">
+                            <span class="score-fill" style="width:{{ p.fresh_pct }}%;background:{% if p.fresh_pct >= 70 %}#4ade80{% elif p.fresh_pct >= 40 %}#fbbf24{% else %}#f87171{% endif %}"></span>
+                        </span>
+                    </td>
+                    <td style="color:rgba(255,255,255,0.4);font-size:0.78rem">
+                        {{ p.created_at.strftime('%d %b %Y, %H:%M') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty hist-table">
+            No predictions yet. <a href="/app" style="color:#fff">Analyse a fruit →</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/fruits.js') }}"></script>
+    <script>
+        // Simple emoji bg for history page
+        const bg = document.getElementById('heroBgImg');
+        const emojis = ['🍎','🍌','🥭','🍊','🍇','🍓','🍉','🍍','🥝','🍒'];
+        const colors = ['#e8836a','#e8c84a','#e8a838','#e89030','#8878c8','#c94060','#48a870','#d8b830','#78a840','#b83060'];
+        const idx = Math.floor(Math.random() * emojis.length);
+        document.body.style.background = colors[idx];
+        const positions = [
+            {top:'5%',left:'3%',size:'100px',rot:'-20deg',dur:'7s',delay:'0s'},
+            {top:'30%',left:'1%',size:'70px',rot:'15deg',dur:'5.5s',delay:'1s'},
+            {top:'70%',left:'4%',size:'90px',rot:'-10deg',dur:'8s',delay:'2s'},
+            {top:'10%',right:'4%',size:'110px',rot:'8deg',dur:'10s',delay:'2.5s'},
+            {top:'50%',right:'2%',size:'80px',rot:'20deg',dur:'6.5s',delay:'0.3s'},
+            {top:'85%',right:'3%',size:'65px',rot:'-12deg',dur:'8s',delay:'1.8s'},
+        ];
+        positions.forEach(p => {
+            const s = document.createElement('span');
+            s.className = 'bg-emoji';
+            s.style.cssText = [p.top?'top:'+p.top:'',p.left?'left:'+p.left:'',p.right?'right:'+p.right:'',
+                '--size:'+p.size,'--rot:'+p.rot,'--dur:'+p.dur,'--delay:'+p.delay].filter(Boolean).join(';');
+            s.textContent = emojis[idx];
+            bg.appendChild(s);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Dataset — too large for GitHub (13,000+ images)
+dataset/fresh/
+dataset/rotten/
+dataset_raw/
+
+# Trained model — large binary file
+model/freshness_model.h5
+model/freshness_model.keras
+model/model_stats.json
+
+# Database
+instance/
+*.db
+
+# Uploads
+static/uploads/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+model/
