@@ -7,6 +7,60 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from database import db, Prediction
 
+# ── Model format migration ────────────────────────────────────────
+# Runs once at module load time, before the Flask app is created.
+# Converts the legacy freshness_model.h5 to the native .keras format
+# so TensorFlow 2.15.0+ can load it without errors.
+def _migrate_h5_to_keras():
+    _dir        = os.path.join(os.path.dirname(__file__), 'model')
+    h5_path     = os.path.join(_dir, 'freshness_model.h5')
+    keras_path  = os.path.join(_dir, 'freshness_model.keras')
+
+    if not os.path.exists(h5_path):
+        return  # Nothing to migrate
+
+    if os.path.exists(keras_path):
+        return  # Already migrated
+
+    print('[FreshScan] Migrating freshness_model.h5 → freshness_model.keras ...')
+
+    try:
+        import tensorflow as tf
+    except Exception as e:
+        print(f'[FreshScan] Warning: could not import TensorFlow for migration: {e}')
+        return
+
+    model = None
+
+    # Strategy 1: safe_mode=False + compile=False — most permissive; skips
+    # strict config validation and optimizer deserialisation entirely.
+    try:
+        model = tf.keras.models.load_model(h5_path, safe_mode=False, compile=False)
+        print('[FreshScan] Migration: loaded with safe_mode=False, compile=False.')
+    except Exception as e1:
+        print(f'[FreshScan] Migration: safe_mode=False + compile=False failed: {e1}')
+
+    # Strategy 2: safe_mode=False only (keeps optimizer state if possible).
+    if model is None:
+        try:
+            model = tf.keras.models.load_model(h5_path, safe_mode=False)
+            print('[FreshScan] Migration: loaded with safe_mode=False.')
+        except Exception as e2:
+            print(f'[FreshScan] Migration: safe_mode=False failed: {e2}')
+
+    if model is None:
+        print('[FreshScan] Warning: all migration strategies failed — '
+              'continuing without migration. App will show "Model not trained yet".')
+        return
+
+    try:
+        model.save(keras_path)
+        print(f'[FreshScan] Migration complete → {keras_path}')
+    except Exception as e:
+        print(f'[FreshScan] Warning: migration save failed: {e}')
+
+_migrate_h5_to_keras()
+
 # ── App setup ────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH']             = 10 * 1024 * 1024
