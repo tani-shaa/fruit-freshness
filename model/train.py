@@ -7,7 +7,11 @@ from tensorflow.keras import layers, models
 from sklearn.metrics import (accuracy_score, precision_score,
                              recall_score, f1_score, confusion_matrix)
 
-MODEL_PATH  = os.path.join(os.path.dirname(__file__), 'freshness_model.h5')
+# Prefer the new native Keras format; fall back to the legacy .h5 path so
+# that the app still works before migration has been run.
+_MODEL_DIR   = os.path.dirname(__file__)
+MODEL_PATH   = os.path.join(_MODEL_DIR, 'freshness_model.keras')
+_LEGACY_PATH = os.path.join(_MODEL_DIR, 'freshness_model.h5')
 DATASET_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dataset'))
 STATS_PATH  = os.path.join(os.path.dirname(__file__), 'model_stats.json')
 IMG_SIZE    = (100, 100)
@@ -76,8 +80,51 @@ def build_model():
 
 
 def load_or_create_model():
+    """
+    Load the best available model file, trying multiple strategies to handle
+    both the new .keras format and the legacy .h5 format.
+
+    Resolution order:
+      1. freshness_model.keras  — native Keras v3 format (TF 2.12+, preferred)
+      2. freshness_model.h5     — legacy HDF5 format; loaded with safe_mode=False
+                                  and compile=False fallbacks to tolerate old
+                                  serialisation keys (batch_shape, optional, …)
+      3. build_model()          — fresh untrained model when no file exists
+    """
+    # ── 1. New .keras format ──────────────────────────────────────────────────
     if os.path.exists(MODEL_PATH):
-        return tf.keras.models.load_model(MODEL_PATH)
+        try:
+            return tf.keras.models.load_model(MODEL_PATH)
+        except Exception as e:
+            print(f'[FreshScan] Warning: could not load {MODEL_PATH}: {e}')
+
+    # ── 2. Legacy .h5 format ──────────────────────────────────────────────────
+    if os.path.exists(_LEGACY_PATH):
+        print(f'[FreshScan] Falling back to legacy model {_LEGACY_PATH}')
+
+        # Strategy A: safe_mode=False bypasses strict config validation
+        try:
+            return tf.keras.models.load_model(_LEGACY_PATH, safe_mode=False)
+        except Exception as e:
+            print(f'[FreshScan] safe_mode=False failed: {e}')
+
+        # Strategy B: empty custom_objects suppresses strict deserialisation
+        try:
+            return tf.keras.models.load_model(_LEGACY_PATH, custom_objects={})
+        except Exception as e:
+            print(f'[FreshScan] custom_objects={{}} failed: {e}')
+
+        # Strategy C: skip optimizer/loss deserialisation entirely
+        try:
+            return tf.keras.models.load_model(
+                _LEGACY_PATH, compile=False, safe_mode=False
+            )
+        except Exception as e:
+            print(f'[FreshScan] compile=False fallback failed: {e}')
+
+        print('[FreshScan] Warning: all .h5 loading strategies failed.')
+
+    # ── 3. No model on disk — return untrained skeleton ───────────────────────
     return build_model()
 
 
