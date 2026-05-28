@@ -77,7 +77,12 @@ def build_model():
 
 def load_or_create_model():
     if os.path.exists(MODEL_PATH):
-        return tf.keras.models.load_model(MODEL_PATH)
+        try:
+            return tf.keras.models.load_model(MODEL_PATH)
+        except Exception as e:
+            print(f"[FreshScan] Failed to load model (version incompatibility?): {e}")
+            print("[FreshScan] Deleting incompatible model file and rebuilding from scratch...")
+            os.remove(MODEL_PATH)
     return build_model()
 
 
