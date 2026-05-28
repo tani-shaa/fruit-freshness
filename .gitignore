@@ -1,31 +1,33 @@
-# Python
+# Python cache
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
-.env
 
-# Dataset — too large for GitHub (13,000+ images)
-dataset/fresh/
-dataset/rotten/
+# Virtual environment
+venv/
+.env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dataset folders
+dataset/
 dataset_raw/
 
-# Trained model variants we don't need
-model/freshness_model.keras
-
-# Database
+# Flask instance files
 instance/
-*.db
 
-# Uploads
+# Uploaded images
 static/uploads/
 
-# VS Code
-.vscode/
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
