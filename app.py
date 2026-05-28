@@ -1,4 +1,8 @@
 import os, uuid, threading, traceback, time, socket
+
+# Suppress TensorFlow C++ logs (INFO, WARNING) — only errors shown
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from database import db, Prediction
@@ -31,27 +35,26 @@ with app.app_context():
         pass  # Column already exists — ignore
 
 # ── Lazy model loading ───────────────────────────────────────────
-# Model is NOT loaded at startup — only on first prediction request.
-# After first load it is cached in _model_cache for all subsequent requests.
-_model_cache = None
+# model is None until first prediction request — no TF at startup.
+model = None
 
 def get_model():
     """
     Lazy-load the Keras model on first call, then return the cached instance.
     Returns None if the model file doesn't exist or loading fails.
     """
-    global _model_cache
-    if _model_cache is not None:
-        return _model_cache
+    global model
+    if model is not None:
+        return model
 
     try:
         from model.train import load_or_create_model, MODEL_PATH
         if not os.path.exists(MODEL_PATH):
             print('[FreshScan] Model file not found — predictions unavailable.')
             return None
-        _model_cache = load_or_create_model()
+        model = load_or_create_model()
         print('[FreshScan] Model loaded into memory.')
-        return _model_cache
+        return model
     except Exception:
         print('[FreshScan] Failed to load model:')
         traceback.print_exc()
