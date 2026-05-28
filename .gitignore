@@ -13,10 +13,8 @@ dataset/fresh/
 dataset/rotten/
 dataset_raw/
 
-# Trained model — large binary file
-model/freshness_model.h5
+# Trained model variants we don't need
 model/freshness_model.keras
-model/model_stats.json
 
 # Database
 instance/
@@ -31,5 +29,3 @@ static/uploads/
 # OS
 .DS_Store
 Thumbs.db
-
-model/
