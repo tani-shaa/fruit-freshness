@@ -98,6 +98,10 @@ def cleanup_uploads(max_age=3600):
         pass
 
 # ── Routes ───────────────────────────────────────────────────────
+@app.route('/health')
+def health():
+    return 'App is running'
+
 @app.route('/')
 def landing():
     return render_template('landing.html')
