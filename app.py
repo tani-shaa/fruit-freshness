@@ -3,15 +3,21 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from database import db, Prediction
 
+# ── App setup ────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH']             = 10 * 1024 * 1024
 app.config['SQLALCHEMY_DATABASE_URI']        = 'sqlite:///freshscan.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-ALLOWED_EXT   = {'jpg', 'jpeg', 'png'}
+# ── Upload folder ────────────────────────────────────────────────
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+ALLOWED_EXT = {'jpg', 'jpeg', 'png'}
+
+# ── Database ─────────────────────────────────────────────────────
+db.init_app(app)
 
 with app.app_context():
     db.create_all()
@@ -24,47 +30,71 @@ with app.app_context():
     except Exception:
         pass  # Column already exists — ignore
 
-# Pre-load model at startup so first prediction is instant
+# ── Lazy model loading ───────────────────────────────────────────
+# Model is NOT loaded at startup — only on first prediction request.
+# After first load it is cached in _model_cache for all subsequent requests.
 _model_cache = None
+
 def get_model():
+    """
+    Lazy-load the Keras model on first call, then return the cached instance.
+    Returns None if the model file doesn't exist or loading fails.
+    """
     global _model_cache
-    if _model_cache is None:
-        from model.train import load_or_create_model
+    if _model_cache is not None:
+        return _model_cache
+
+    try:
+        from model.train import load_or_create_model, MODEL_PATH
+        if not os.path.exists(MODEL_PATH):
+            print('[FreshScan] Model file not found — predictions unavailable.')
+            return None
         _model_cache = load_or_create_model()
-    return _model_cache
+        print('[FreshScan] Model loaded into memory.')
+        return _model_cache
+    except Exception:
+        print('[FreshScan] Failed to load model:')
+        traceback.print_exc()
+        return None
 
-try:
-    get_model()
-    print('[FreshScan] Model loaded into memory.')
-except Exception as e:
-    print(f'[FreshScan] Model not loaded: {e}')
-
+# ── Constants ────────────────────────────────────────────────────
 SHELF_LIFE = {
-    'apple':14,'banana':5,'mango':6,'orange':14,'grapes':7,
-    'strawberry':3,'watermelon':10,'pineapple':5,'papaya':5,
-    'kiwi':7,'cherry':5,'pomegranate':14,'pear':7,'peach':5,'blueberry':7,
+    'apple': 14, 'banana': 5,  'mango': 6,    'orange': 14, 'grapes': 7,
+    'strawberry': 3, 'watermelon': 10, 'pineapple': 5, 'papaya': 5,
+    'kiwi': 7,   'cherry': 5,  'pomegranate': 14, 'pear': 7, 'peach': 5,
+    'blueberry': 7,
 }
 
-def allowed_file(f):
-    return '.' in f and f.rsplit('.',1)[1].lower() in ALLOWED_EXT
+# ── Helpers ──────────────────────────────────────────────────────
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
 
-def get_verdict(p):
-    return 'Fresh' if p >= 70 else 'Can be Eaten' if p >= 40 else 'Rotten'
+def get_verdict(fresh_pct):
+    if fresh_pct >= 70:
+        return 'Fresh'
+    if fresh_pct >= 40:
+        return 'Can be Eaten'
+    return 'Rotten'
 
 def estimate_shelf_life(fruit, fresh_pct):
     max_days = SHELF_LIFE.get(fruit.lower(), 7)
     return max(0, round((fresh_pct / 100) * max_days))
 
 def cleanup_uploads(max_age=3600):
+    """Delete uploaded files older than max_age seconds."""
     now = time.time()
-    for f in os.listdir(UPLOAD_FOLDER):
-        fp = os.path.join(UPLOAD_FOLDER, f)
-        try:
-            if os.path.isfile(fp) and (now - os.path.getmtime(fp)) > max_age:
-                os.remove(fp)
-        except Exception:
-            pass
+    try:
+        for f in os.listdir(app.config['UPLOAD_FOLDER']):
+            fp = os.path.join(app.config['UPLOAD_FOLDER'], f)
+            try:
+                if os.path.isfile(fp) and (now - os.path.getmtime(fp)) > max_age:
+                    os.remove(fp)
+            except Exception:
+                pass
+    except Exception:
+        pass
 
+# ── Routes ───────────────────────────────────────────────────────
 @app.route('/')
 def landing():
     return render_template('landing.html')
@@ -88,15 +118,15 @@ def stats_page():
     path = os.path.join('model', 'model_stats.json')
     if not os.path.exists(path):
         return '<h2 style="font-family:sans-serif;padding:40px">Run pretrain.py first.</h2>'
-    return jsonify(json.load(open(path)))
+    with open(path) as f:
+        return jsonify(json.load(f))
 
 @app.route('/status')
 def status():
     try:
         from model.train import training_state, MODEL_PATH
         model_ready = os.path.exists(MODEL_PATH)
-        # If model exists but accuracy not in memory, show "Ready"
-        accuracy = training_state['accuracy'] if training_state['accuracy'] else ('Ready' if model_ready else None)
+        accuracy    = training_state['accuracy'] if training_state['accuracy'] else ('Ready' if model_ready else None)
         return jsonify({
             'model_ready':       model_ready,
             'training':          training_state['running'],
@@ -108,35 +138,47 @@ def status():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    filepath = None
     try:
         from model.train import MODEL_PATH, preprocess
         import numpy as np
 
+        # ── Validate request ─────────────────────────────────────
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
 
         file  = request.files['image']
-        fruit = request.form.get('fruit', 'unknown')
+        fruit = request.form.get('fruit', 'unknown').strip().lower()
 
-        if not file.filename or not allowed_file(file.filename):
-            return jsonify({'error': 'Invalid file'}), 400
+        if not file or not file.filename:
+            return jsonify({'error': 'Empty file received'}), 400
 
-        ext      = file.filename.rsplit('.',1)[1].lower()
-        filename = fruit + '_' + uuid.uuid4().hex[:8] + '.' + ext
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Only JPG and PNG are accepted.'}), 400
+
+        # ── Save upload ──────────────────────────────────────────
+        ext      = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{fruit}_{uuid.uuid4().hex[:8]}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
+        # Kick off background cleanup (non-blocking)
         threading.Thread(target=cleanup_uploads, daemon=True).start()
 
+        # ── Model check ──────────────────────────────────────────
         if not os.path.exists(MODEL_PATH):
             return jsonify({
-                'label':'Unknown', 'fresh_pct':0,
-                'fruit':fruit, 'filename':filename,
-                'message':'Model not trained yet. Run pretrain.py first.'
+                'label': 'Unknown', 'fresh_pct': 0,
+                'fruit': fruit, 'filename': filename,
+                'message': 'Model not trained yet. Run pretrain.py first.'
             })
 
-        # Use cached model — no disk load on every request
+        # ── Lazy-load model ──────────────────────────────────────
         model = get_model()
+        if model is None:
+            return jsonify({'error': 'Model could not be loaded. Check server logs.'}), 500
+
+        # ── Inference ────────────────────────────────────────────
         arr   = preprocess(filepath)
         arr   = np.expand_dims(arr, axis=0)
         score = float(model.predict(arr, verbose=0)[0][0])
@@ -147,23 +189,24 @@ def predict():
         verdict    = get_verdict(fresh_pct)
         days_left  = estimate_shelf_life(fruit, fresh_pct)
 
-        db.session.add(Prediction(fruit=fruit, verdict=verdict, fresh_pct=fresh_pct, filename=filename))
+        # ── Persist to DB ────────────────────────────────────────
+        db.session.add(Prediction(
+            fruit=fruit, verdict=verdict,
+            fresh_pct=fresh_pct, filename=filename
+        ))
         db.session.commit()
 
         return jsonify({
-            'label':label, 'fresh_pct':fresh_pct, 'rotten_pct':rotten_pct,
-            'fruit':fruit, 'filename':filename,
-            'verdict':verdict, 'days_left':days_left,
+            'label': label, 'fresh_pct': fresh_pct, 'rotten_pct': rotten_pct,
+            'fruit': fruit, 'filename': filename,
+            'verdict': verdict, 'days_left': days_left,
         })
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': 'Server error: ' + str(e)}), 500
 
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'error': 'Server error: ' + str(e)}), 500
-
+# ── Entry point ──────────────────────────────────────────────────
 if __name__ == '__main__':
     try:
         local_ip = socket.gethostbyname(socket.gethostname())
