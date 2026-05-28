@@ -1,6 +1,3 @@
-Here’s a polished, professional version of your FreshScan project documentation that reads like it was written by a real CS student—not AI-generated:
-
-***
 
 # FreshScan – AI-Powered Fruit Freshness Detection System
 
