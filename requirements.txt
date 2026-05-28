@@ -5,6 +5,5 @@ opencv-python-headless==4.9.0.80
 numpy==1.26.4
 Werkzeug==2.3.7
 gunicorn==21.2.0
-numpy
 pandas
 scikit-learn
