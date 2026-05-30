@@ -136,6 +136,8 @@ def status():
         accuracy    = training_state['accuracy'] if training_state['accuracy'] else ('Ready' if model_ready else None)
         return jsonify({
             'model_ready':       model_ready,
+            'model_path':        MODEL_PATH,
+            'model_path_exists': model_ready,
             'training':          training_state['running'],
             'accuracy':          accuracy,
             'total_predictions': Prediction.query.count(),
