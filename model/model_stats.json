@@ -1,0 +1,40 @@
+{
+  "dataset": {
+    "total_images": 13606,
+    "fresh_images": 5906,
+    "rotten_images": 7700,
+    "train_samples": 10884,
+    "test_samples": 2722,
+    "train_split": "80%",
+    "test_split": "20%",
+    "after_augmentation": 32652
+  },
+  "training": {
+    "epochs": 30,
+    "batch_size": 16,
+    "optimizer": "Adam (lr=0.0001)",
+    "loss_function": "Binary Crossentropy",
+    "train_accuracy": 99.77,
+    "val_accuracy": 99.39,
+    "train_loss": 0.0093,
+    "val_loss": 0.024,
+    "fit_status": "Good fit (gap: 0.4%)"
+  },
+  "evaluation": {
+    "test_accuracy": 99.08,
+    "precision": 99.54,
+    "recall": 98.83,
+    "f1_score": 99.19,
+    "confusion_matrix": [
+      [
+        1172,
+        7
+      ],
+      [
+        18,
+        1525
+      ]
+    ],
+    "notes": "confusion_matrix: [[TN, FP], [FN, TP]] \u2014 0=fresh, 1=rotten"
+  }
+}
