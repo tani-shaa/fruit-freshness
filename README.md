@@ -1,6 +1,10 @@
 
 # FreshScan – AI-Powered Fruit Freshness Detection System
 
+Live Demo: https://fruit-freshness-production-a45a.up.railway.app
+
+GitHub Repository: https://github.com/tani-shaa/fruit-freshness
+
 ## Overview
 
 FreshScan is a full-stack web application that uses computer vision to determine whether a fruit is fresh, still edible, or rotten—based on a single uploaded image. At its core is a Convolutional Neural Network (CNN) trained on 13,606 fruit images, delivering instant freshness classifications with high accuracy.
@@ -10,6 +14,23 @@ The system preprocesses images using OpenCV (resizing, Gaussian blur, CLAHE cont
 FreshScan aims to reduce food waste by giving users an objective, fast, and accessible way to assess fruit quality.
 
 ***
+## Screenshots
+
+### Landing Page
+
+<img width="943" height="899" alt="Screenshot 2026-04-07 235228" src="https://github.com/user-attachments/assets/d136890d-e0b0-4b44-a778-bec95410bfe5" />
+
+### Detection Page
+
+<img width="914" height="857" alt="Screenshot 2026-04-07 235807" src="https://github.com/user-attachments/assets/5d9697ab-1d00-464e-9ad5-f2ca1b366e68" />
+
+### Prediction Result
+
+<img width="787" height="885" alt="Screenshot 2026-05-02 174735" src="https://github.com/user-attachments/assets/89b0d2b4-3875-453d-a939-3f2e6c2d1713" />
+
+### History Page
+
+<img width="998" height="830" alt="Screenshot 2026-05-02 174822" src="https://github.com/user-attachments/assets/6a29cab9-1463-4684-81c9-a31abdb10b08" />
 
 ## Key Features
 
